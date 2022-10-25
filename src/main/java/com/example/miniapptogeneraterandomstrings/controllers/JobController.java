@@ -1,6 +1,6 @@
-package com.example.miniapptogeneraterandomstrings.Controllers;
+package com.example.miniapptogeneraterandomstrings.controllers;
 
-import com.example.miniapptogeneraterandomstrings.Model.Job;
+import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;

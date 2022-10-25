@@ -25,3 +25,7 @@ App should allow you to generate multiple results in parallel. So you can ask th
 
 App should be available to download on the git repository (github, gitlab ,bitbucket or anything else). 
 After download there should be only one command to run an application and second one to run tests. 
+
+
+DONE:
+- Added Swagger: http://localhost:8080/swagger-ui/index.html

@@ -27,8 +27,8 @@ public class SwaggerConfig implements WebMvcConfigurer {
    private ApiInfo apiInfoMetaData() {
 
         return new ApiInfoBuilder().title("Mini app to generate random strings")
-                .description("API Endpoint Decoration")
-                .contact(new Contact("t", "--", "@gmail.com"))
+                .description("API")
+                .contact(new Contact("", "", ""))
                 .license("Apache 2.0")
                 .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html")
                 .version("1.0.0")
