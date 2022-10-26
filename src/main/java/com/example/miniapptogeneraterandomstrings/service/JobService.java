@@ -3,6 +3,8 @@ package com.example.miniapptogeneraterandomstrings.service;
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+
 @Service
 public class JobService {
 
@@ -14,45 +16,34 @@ public class JobService {
         Long maxNumberOfCombinations = 0L;
 
         if (max < min || job.getTextCombination() == null || numberOfStrings <= 0) {
-        throw new IllegalArgumentException("Wrong Data");
+            throw new IllegalArgumentException("ERROR: Change input data.");
         }
         for (int i = max; i >= min; i--) {
-            maxNumberOfCombinations+=getFactorial(i);
+            maxNumberOfCombinations += getFactorial(i);
         }
-        if(maxNumberOfCombinations < numberOfStrings) {
-            throw new IllegalArgumentException("You want to many combination that can be made.");
+        if (maxNumberOfCombinations < numberOfStrings) {
+            throw new IllegalArgumentException("ERROR: You want too many combination than can be made.");
         }
         return maxNumberOfCombinations;
     }
 
-    public Long maxNumberOfGivenStringCombinations(String string){
-        Long factorial = 1L;
-        for (int i = 1; i <=string.length() ; i++) {
-            factorial*=i;
-        }
-        return factorial;
+    public Long maxNumberOfGivenStringCombinations(String string) {
+        return getFactorial(string.length());
     }
 
-    private Long getFactorial(int number){
+    private Long getFactorial(int number) {
         Long factorial = 1L;
-        for (int i = 1; i <= number ; i++) {
-            factorial*=i;
+        for (int i = 1; i <= number; i++) {
+            factorial *= i;
         }
         return factorial;
     }
 
 
-    private Long numberOfPossibilities(int min, int max, String textCombination, int numberOfStrings) {
-        Long factorial = 1L;
-        Long possibilities = 0L;
-        for (int i = max; i < min; i--) {
-            possibilities+=factorial;
-            for (int j = 1; j < i; j++) {
-                factorial *=j;
-            }
+    public void generateStrings(List<Job> jobs) {
+        if (jobs.size() > 1) {
+            Collections.sort(jobs, Comparator.comparingInt(Job::getNumberOfStrings));
         }
 
-
-        return possibilities;
     }
 }
