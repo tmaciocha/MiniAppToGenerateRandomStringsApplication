@@ -3,8 +3,8 @@ package com.example.miniapptogeneraterandomstrings.service;
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+
+import java.io.*;
 import java.util.*;
 
 @Service
@@ -39,12 +39,10 @@ public class JobService {
         return factorial;
     }
 
-    public void generateStrings(List<Job> jobs) throws FileNotFoundException {
-        PrintWriter printWriter = new PrintWriter("generatedStrings.txt");
+    public void generateStrings(List<Job> jobs) throws IOException {
+        FileWriter fileWriter = new FileWriter("generatedStrings.txt", true);
 
-        if (jobs.size() > 1) {
-            jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
-        }
+        jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
 
         Iterator<Job> iterator = jobs.iterator();
         while (iterator.hasNext()) {
@@ -61,10 +59,11 @@ public class JobService {
 
             Iterator<String> stringIterator = stringList.iterator();
             while (stringIterator.hasNext()) {
-                printWriter.println(stringIterator.next());
+                fileWriter.append(stringIterator.next() + "\n");
             }
+            fileWriter.close();
         }
-        printWriter.close();
+
     }
 
     public int getRandomNumber(int min, int max) {

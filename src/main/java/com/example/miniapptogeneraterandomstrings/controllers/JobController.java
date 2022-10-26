@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -42,7 +43,7 @@ public class JobController {
 
     //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs() throws FileNotFoundException {
+    public List<Job> getAllJobs() throws IOException {
         jobService.generateStrings(jobs);
         return new ArrayList<>(jobs);
     }
