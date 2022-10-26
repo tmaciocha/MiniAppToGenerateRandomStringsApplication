@@ -1,21 +1,21 @@
 package com.example.miniapptogeneraterandomstrings.service;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
-
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 
 @Service
 public class JobService {
-
-
     public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
         int max = job.getMax();
         int numberOfStrings = job.getNumberOfStrings();
         Long maxNumberOfCombinations = 0L;
 
-        if (max < min || job.getTextCombination() == null || numberOfStrings <= 0) {
+        if (max < min || job.getTextToGenerateRandomString() == null || numberOfStrings <= 0) {
             throw new IllegalArgumentException("ERROR: Change input data.");
         }
         for (int i = max; i >= min; i--) {
@@ -39,11 +39,35 @@ public class JobService {
         return factorial;
     }
 
+    public void generateStrings(List<Job> jobs) throws FileNotFoundException {
+        PrintWriter printWriter = new PrintWriter("generatedStrings.txt");
 
-    public void generateStrings(List<Job> jobs) {
         if (jobs.size() > 1) {
-            Collections.sort(jobs, Comparator.comparingInt(Job::getNumberOfStrings));
+            jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
         }
 
+        Iterator<Job> iterator = jobs.iterator();
+        while (iterator.hasNext()) {
+            Job job = iterator.next();
+            Set<String> stringList = new HashSet<>();
+
+            int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
+
+            String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
+
+            while (stringList.size() < job.getNumberOfStrings()) {
+                stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
+            }
+
+            Iterator<String> stringIterator = stringList.iterator();
+            while (stringIterator.hasNext()) {
+                printWriter.println(stringIterator.next());
+            }
+        }
+        printWriter.close();
+    }
+
+    public int getRandomNumber(int min, int max) {
+        return (int) ((Math.random() * (max + 1 - min)) + min);
     }
 }

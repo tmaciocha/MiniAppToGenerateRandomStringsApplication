@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,6 +18,7 @@ public class JobController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
 
 
+    //to recive new job
     @PostMapping("/")
     public Job addJob(@RequestBody Job job){
         jobs.add(job);
@@ -26,23 +27,23 @@ public class JobController {
         logger.info("max number of string with Min and Max values. Min: " + job.getMin() + ", max: " + job.getMax() + " = "
                 + jobService.maxNumberOfCharsCombinationsFromMaxAndMin(job));
 
-        jobService.maxNumberOfGivenStringCombinations(job.getTextCombination());
-        logger.info("maxNumberOfGivenStringCombinations for given string: " + job.getTextCombination() + " = "
-                + jobService.maxNumberOfGivenStringCombinations(job.getTextCombination()));
-
-        jobService.generateStrings(jobs);
-
+        jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString());
+        logger.info("maxNumberOfGivenStringCombinations for given string: " + job.getTextToGenerateRandomString() + " = "
+                + jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString()));
         return job;
     }
 
+    //to see how many jobs are running
     @GetMapping("/runningJobs")
     public int getJob(){
         return jobs.size();
     }
 
 
+    //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs(){
+    public List<Job> getAllJobs() throws FileNotFoundException {
+        jobService.generateStrings(jobs);
         return new ArrayList<>(jobs);
     }
 

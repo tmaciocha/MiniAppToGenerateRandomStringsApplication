@@ -9,7 +9,7 @@ public class Job {
 
     private int min;
     private int max;
-    private String textCombination;
+    private String textToGenerateRandomString;
     private int numberOfStrings;
 
 }
