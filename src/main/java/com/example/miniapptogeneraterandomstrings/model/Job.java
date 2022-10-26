@@ -7,10 +7,9 @@ import lombok.Setter;
 @Setter
 public class Job {
 
-    private int id;
     private int min;
     private int max;
-    private String text;
+    private String textToGenerateRandomString;
     private int numberOfStrings;
 
 }

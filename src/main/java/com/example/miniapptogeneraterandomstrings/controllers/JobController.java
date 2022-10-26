@@ -1,32 +1,51 @@
 package com.example.miniapptogeneraterandomstrings.controllers;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
+import com.example.miniapptogeneraterandomstrings.service.JobService;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
+@RequiredArgsConstructor
 public class JobController {
-    ConcurrentHashMap<Integer, Job> jobs = new ConcurrentHashMap<>();
+    private final JobService jobService;
+    List<Job> jobs = new ArrayList<>();
+    private static final Logger logger = LoggerFactory.getLogger(JobController.class);
 
 
+    //to recive new job
     @PostMapping("/")
     public Job addJob(@RequestBody Job job){
-        jobs.put(job.getId(), job);
+        jobs.add(job);
+
+        jobService.maxNumberOfCharsCombinationsFromMaxAndMin(job);
+        logger.info("max number of string with Min and Max values. Min: " + job.getMin() + ", max: " + job.getMax() + " = "
+                + jobService.maxNumberOfCharsCombinationsFromMaxAndMin(job));
+
+        jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString());
+        logger.info("maxNumberOfGivenStringCombinations for given string: " + job.getTextToGenerateRandomString() + " = "
+                + jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString()));
         return job;
     }
 
+    //to see how many jobs are running
     @GetMapping("/runningJobs")
     public int getJob(){
         return jobs.size();
     }
 
 
+    //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs(){
-        return new ArrayList<Job>(jobs.values());
+    public List<Job> getAllJobs() throws IOException {
+        jobService.generateStrings(jobs);
+        return new ArrayList<>(jobs);
     }
 
 
