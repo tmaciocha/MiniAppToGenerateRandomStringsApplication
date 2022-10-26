@@ -63,7 +63,6 @@ public class JobService {
             }
             fileWriter.close();
         }
-
     }
 
     public int getRandomNumber(int min, int max) {
