@@ -10,7 +10,7 @@ public class Job {
     private int id;
     private int min;
     private int max;
-    private String text;
+    private String textCombination;
     private int numberOfStrings;
 
 }
