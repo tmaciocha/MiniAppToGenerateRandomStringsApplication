@@ -2,13 +2,19 @@ package com.example.miniapptogeneraterandomstrings.service;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class JobService {
+    public int jobInProgress = 0;
+
     public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
         int max = job.getMax();
@@ -39,29 +45,50 @@ public class JobService {
         return factorial;
     }
 
-    public void generateStrings(List<Job> jobs) throws IOException {
-        FileWriter fileWriter = new FileWriter("generatedStrings.txt", true);
+    @Async
+    public void generateStrings(List<Job> jobs) {
 
+        jobInProgress = 0;
         jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
 
         Iterator<Job> iterator = jobs.iterator();
         while (iterator.hasNext()) {
-            Job job = iterator.next();
-            Set<String> stringList = new HashSet<>();
 
-            int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
+            ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
+            executorService.submit(() -> {
+                jobInProgress++;
+                Job job = iterator.next();
+                FileWriter fileWriter = null;
+                try {
+                    fileWriter = new FileWriter("generatedStringsFromGivenString"+job.getTextToGenerateRandomString().toUpperCase()+".txt", true);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                Set<String> stringList = new HashSet<>();
 
-            String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
+                int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
 
-            while (stringList.size() < job.getNumberOfStrings()) {
-                stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
-            }
+                String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
 
-            Iterator<String> stringIterator = stringList.iterator();
-            while (stringIterator.hasNext()) {
-                fileWriter.append(stringIterator.next() + "\n");
-            }
-            fileWriter.close();
+                while (stringList.size() < job.getNumberOfStrings()) {
+                    stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
+                }
+
+                Iterator<String> stringIterator = stringList.iterator();
+                while (stringIterator.hasNext()) {
+                    try {
+                        fileWriter.append(stringIterator.next() + "\n");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                try {
+                    fileWriter.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
         }
 
     }
