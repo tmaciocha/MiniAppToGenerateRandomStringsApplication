@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -46,19 +47,20 @@ public class JobService {
         }
         return factorial;
     }
-    public void generateStrings(List<Job> jobs) throws InterruptedException {
-        Date date = new Date();
-        jobInProgress = 0;
+
+    public void generateStrings(List<Job> jobs)  {
+
         jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
-        delay(8);
         Iterator<Job> iterator = jobs.iterator();
+
+        jobInProgress = jobs.size();
+
         while (iterator.hasNext()) {
 
             ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
-            executorService.submit(() -> {
-                jobInProgress++;
+            Future<?> f = executorService.submit(() -> {
                 Job job = iterator.next();
-                logger.info(job.getTextToGenerateRandomString() + " start: "+ date.getTime());
+                logger.info(job.getTextToGenerateRandomString() + " start: " + System.currentTimeMillis());
                 FileWriter fileWriter = null;
                 try {
                     fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + ".txt", true);
@@ -74,7 +76,6 @@ public class JobService {
                 while (stringList.size() < job.getNumberOfStrings()) {
                     stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
                 }
-
                 try {
                     delay(8);
                 } catch (InterruptedException e) {
@@ -90,12 +91,15 @@ public class JobService {
                     }
                 }
                 try {
-                    logger.info(job.getTextToGenerateRandomString() + " STOP: "+ date.getTime());
+                    logger.info(job.getTextToGenerateRandomString() + " STOP: " + System.currentTimeMillis());
                     fileWriter.close();
+                    jobInProgress--;
+                    logger.info("jobInProgress: " + jobInProgress);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
+            executorService.shutdown();
         }
     }
 
