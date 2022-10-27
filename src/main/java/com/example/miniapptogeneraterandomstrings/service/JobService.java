@@ -2,18 +2,20 @@ package com.example.miniapptogeneraterandomstrings.service;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.scheduling.annotation.Async;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class JobService {
     public int jobInProgress = 0;
+    private static final Logger logger = LoggerFactory.getLogger(JobService.class);
 
     public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
@@ -44,13 +46,11 @@ public class JobService {
         }
         return factorial;
     }
-
-    @Async
-    public void generateStrings(List<Job> jobs) {
-
+    public void generateStrings(List<Job> jobs) throws InterruptedException {
+        Date date = new Date();
         jobInProgress = 0;
         jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
-
+        delay(8);
         Iterator<Job> iterator = jobs.iterator();
         while (iterator.hasNext()) {
 
@@ -58,9 +58,10 @@ public class JobService {
             executorService.submit(() -> {
                 jobInProgress++;
                 Job job = iterator.next();
+                logger.info(job.getTextToGenerateRandomString() + " start: "+ date.getTime());
                 FileWriter fileWriter = null;
                 try {
-                    fileWriter = new FileWriter("generatedStringsFromGivenString"+job.getTextToGenerateRandomString().toUpperCase()+".txt", true);
+                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + ".txt", true);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -74,6 +75,12 @@ public class JobService {
                     stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
                 }
 
+                try {
+                    delay(8);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
                 Iterator<String> stringIterator = stringList.iterator();
                 while (stringIterator.hasNext()) {
                     try {
@@ -83,17 +90,21 @@ public class JobService {
                     }
                 }
                 try {
+                    logger.info(job.getTextToGenerateRandomString() + " STOP: "+ date.getTime());
                     fileWriter.close();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             });
-
         }
-
     }
 
     public int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max + 1 - min)) + min);
+    }
+
+
+    private void delay(int second) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(second);
     }
 }

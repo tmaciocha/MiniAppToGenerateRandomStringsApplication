@@ -43,9 +43,8 @@ public class JobController {
 
     //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs() throws IOException {
+    public List<Job> getAllJobs() throws InterruptedException {
         jobService.generateStrings(jobs);
-
         return new ArrayList<>(jobs);
     }
 
