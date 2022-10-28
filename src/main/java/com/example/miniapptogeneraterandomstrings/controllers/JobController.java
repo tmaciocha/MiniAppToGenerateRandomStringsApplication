@@ -14,13 +14,12 @@ import java.util.*;
 public class JobController {
     private final JobService jobService;
     List<Job> jobs = new ArrayList<>();
-    private static final Logger logger = LoggerFactory.getLogger(JobController.class);
-
 
     //to add new job
     @PostMapping("/")
     public Job addJob(@RequestBody Job job){
             jobService.saveJob(job);
+            jobs.add(job);
         return job;
     }
 
@@ -37,8 +36,4 @@ public class JobController {
         jobService.generateStrings();
         return new ArrayList<>(jobs);
     }
-
-
-
-
 }

@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -50,14 +49,6 @@ public class JobService {
         return getFactorial(string.length());
     }
 
-    private Long getFactorial(int number) {
-        Long factorial = 1L;
-        for (int i = 1; i <= number; i++) {
-            factorial *= i;
-        }
-        return factorial;
-    }
-
     public void generateStrings() {
         List<Job> jobs = getJobs();
 
@@ -71,24 +62,23 @@ public class JobService {
                 Job job = iterator.next();
                 FileWriter fileWriter = null;
                 try {
-                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase()+ "_" + job.getId() + ".txt", true);
+                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + "_" + job.getId() + ".txt", true);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
                 Set<String> stringList = new HashSet<>();
 
-                int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
-
-                String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
-
                 while (stringList.size() < job.getNumberOfStrings()) {
-                    stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
+                    stringList.add(RandomStringUtils
+                            .random(getRandomNumber(job.getMin(), job.getMax()),
+                                    job.getTextToGenerateRandomString() + RandomStringUtils.random(countMissingLetters(job),
+                                            job.getTextToGenerateRandomString())));
                 }
 
                 Iterator<String> stringIterator = stringList.iterator();
                 while (stringIterator.hasNext()) {
                     try {
-                        fileWriter.append(stringIterator.next() + "\n");
+                        fileWriter.append(stringIterator.next()).append("\n");
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -104,20 +94,26 @@ public class JobService {
         }
     }
 
+    private int countMissingLetters(Job job) {
+        return job.getMax() % job.getTextToGenerateRandomString().length();
+    }
+
     private int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max + 1 - min)) + min);
     }
-
-
-    private void delay(int second) throws InterruptedException {
-        TimeUnit.SECONDS.sleep(second);
-    }
-
 
     public void saveJob(Job job) {
         if (maxNumberOfCharsCombinationsFromMaxAndMin(job) >= maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString())) {
             jobRepository.save(job);
         }
+    }
+
+    private Long getFactorial(int number) {
+        Long factorial = 1L;
+        for (int i = 1; i <= number; i++) {
+            factorial *= i;
+        }
+        return factorial;
     }
 
     public int getNumberJobsInProgress() {
