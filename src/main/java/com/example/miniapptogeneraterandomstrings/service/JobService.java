@@ -2,13 +2,22 @@ package com.example.miniapptogeneraterandomstrings.service;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class JobService {
+    public int jobInProgress = 0;
+    private static final Logger logger = LoggerFactory.getLogger(JobService.class);
+
     public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
         int max = job.getMax();
@@ -39,33 +48,67 @@ public class JobService {
         return factorial;
     }
 
-    public void generateStrings(List<Job> jobs) throws IOException {
-        FileWriter fileWriter = new FileWriter("generatedStrings.txt", true);
+    public void generateStrings(List<Job> jobs)  {
 
         jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
-
         Iterator<Job> iterator = jobs.iterator();
+
+        jobInProgress = jobs.size();
+
         while (iterator.hasNext()) {
-            Job job = iterator.next();
-            Set<String> stringList = new HashSet<>();
 
-            int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
+            ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
+            Future<?> f = executorService.submit(() -> {
+                Job job = iterator.next();
+                logger.info(job.getTextToGenerateRandomString() + " start: " + System.currentTimeMillis());
+                FileWriter fileWriter = null;
+                try {
+                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + ".txt", true);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                Set<String> stringList = new HashSet<>();
 
-            String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
+                int missingLetters = job.getMax() % job.getTextToGenerateRandomString().length();
 
-            while (stringList.size() < job.getNumberOfStrings()) {
-                stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
-            }
+                String stringWithAddedLetters = job.getTextToGenerateRandomString() + RandomStringUtils.random(missingLetters, job.getTextToGenerateRandomString());
 
-            Iterator<String> stringIterator = stringList.iterator();
-            while (stringIterator.hasNext()) {
-                fileWriter.append(stringIterator.next() + "\n");
-            }
-            fileWriter.close();
+                while (stringList.size() < job.getNumberOfStrings()) {
+                    stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
+                }
+                try {
+                    delay(8);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Iterator<String> stringIterator = stringList.iterator();
+                while (stringIterator.hasNext()) {
+                    try {
+                        fileWriter.append(stringIterator.next() + "\n");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                try {
+                    logger.info(job.getTextToGenerateRandomString() + " STOP: " + System.currentTimeMillis());
+                    fileWriter.close();
+                    jobInProgress--;
+                    logger.info("jobInProgress: " + jobInProgress);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            executorService.shutdown();
         }
     }
 
     public int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max + 1 - min)) + min);
+    }
+
+
+    private void delay(int second) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(second);
     }
 }

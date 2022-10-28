@@ -37,13 +37,13 @@ public class JobController {
     //to see how many jobs are running
     @GetMapping("/runningJobs")
     public int getJob(){
-        return jobs.size();
+        return jobService.jobInProgress;
     }
 
 
     //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs() throws IOException {
+    public List<Job> getAllJobs() throws InterruptedException {
         jobService.generateStrings(jobs);
         return new ArrayList<>(jobs);
     }
