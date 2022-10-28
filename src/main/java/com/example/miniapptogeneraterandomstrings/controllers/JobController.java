@@ -7,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.*;
 
 @RestController
@@ -19,32 +17,24 @@ public class JobController {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
 
 
-    //to recive new job
+    //to add new job
     @PostMapping("/")
     public Job addJob(@RequestBody Job job){
-        jobs.add(job);
-
-        jobService.maxNumberOfCharsCombinationsFromMaxAndMin(job);
-        logger.info("max number of string with Min and Max values. Min: " + job.getMin() + ", max: " + job.getMax() + " = "
-                + jobService.maxNumberOfCharsCombinationsFromMaxAndMin(job));
-
-        jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString());
-        logger.info("maxNumberOfGivenStringCombinations for given string: " + job.getTextToGenerateRandomString() + " = "
-                + jobService.maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString()));
+            jobService.saveJob(job);
         return job;
     }
 
     //to see how many jobs are running
     @GetMapping("/runningJobs")
     public int getJob(){
-        return jobService.jobInProgress;
+        return jobService.getNumberJobsInProgress();
     }
 
 
     //to generate results
     @GetMapping("/")
-    public List<Job> getAllJobs() throws InterruptedException {
-        jobService.generateStrings(jobs);
+    public List<Job> getAllJobs() {
+        jobService.generateStrings();
         return new ArrayList<>(jobs);
     }
 

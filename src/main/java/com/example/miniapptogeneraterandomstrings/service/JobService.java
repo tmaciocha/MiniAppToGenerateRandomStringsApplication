@@ -1,9 +1,9 @@
 package com.example.miniapptogeneraterandomstrings.service;
 
 import com.example.miniapptogeneraterandomstrings.model.Job;
+import com.example.miniapptogeneraterandomstrings.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -14,29 +14,39 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class JobService {
-    public int jobInProgress = 0;
-    private static final Logger logger = LoggerFactory.getLogger(JobService.class);
+    private final JobRepository jobRepository;
 
-    public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
+    private Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
         int max = job.getMax();
         int numberOfStrings = job.getNumberOfStrings();
         Long maxNumberOfCombinations = 0L;
 
-        if (max < min || job.getTextToGenerateRandomString() == null || numberOfStrings <= 0) {
+        if (max < min ||
+                job.getTextToGenerateRandomString() == null ||
+                numberOfStrings <= 0 ||
+                job.getTextToGenerateRandomString().equals("")) {
             throw new IllegalArgumentException("ERROR: Change input data.");
         }
+
         for (int i = max; i >= min; i--) {
             maxNumberOfCombinations += getFactorial(i);
         }
+
         if (maxNumberOfCombinations < numberOfStrings) {
             throw new IllegalArgumentException("ERROR: You want too many combination than can be made.");
         }
+
+        if (max < job.getTextToGenerateRandomString().length()) {
+            throw new IllegalArgumentException("ERROR: Source string length can't be larger than max, please change input.");
+        }
+
         return maxNumberOfCombinations;
     }
 
-    public Long maxNumberOfGivenStringCombinations(String string) {
+    private Long maxNumberOfGivenStringCombinations(String string) {
         return getFactorial(string.length());
     }
 
@@ -48,22 +58,20 @@ public class JobService {
         return factorial;
     }
 
-    public void generateStrings(List<Job> jobs)  {
+    public void generateStrings() {
+        List<Job> jobs = getJobs();
 
         jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
+
         Iterator<Job> iterator = jobs.iterator();
 
-        jobInProgress = jobs.size();
-
         while (iterator.hasNext()) {
-
             ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
             Future<?> f = executorService.submit(() -> {
                 Job job = iterator.next();
-                logger.info(job.getTextToGenerateRandomString() + " start: " + System.currentTimeMillis());
                 FileWriter fileWriter = null;
                 try {
-                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + ".txt", true);
+                    fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase()+ "_" + job.getId() + ".txt", true);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -76,11 +84,6 @@ public class JobService {
                 while (stringList.size() < job.getNumberOfStrings()) {
                     stringList.add(RandomStringUtils.random(getRandomNumber(job.getMin(), job.getMax()), stringWithAddedLetters));
                 }
-                try {
-                    delay(8);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
 
                 Iterator<String> stringIterator = stringList.iterator();
                 while (stringIterator.hasNext()) {
@@ -91,10 +94,8 @@ public class JobService {
                     }
                 }
                 try {
-                    logger.info(job.getTextToGenerateRandomString() + " STOP: " + System.currentTimeMillis());
                     fileWriter.close();
-                    jobInProgress--;
-                    logger.info("jobInProgress: " + jobInProgress);
+                    removeJob(job.getId());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -103,12 +104,31 @@ public class JobService {
         }
     }
 
-    public int getRandomNumber(int min, int max) {
+    private int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max + 1 - min)) + min);
     }
 
 
     private void delay(int second) throws InterruptedException {
         TimeUnit.SECONDS.sleep(second);
+    }
+
+
+    public void saveJob(Job job) {
+        if (maxNumberOfCharsCombinationsFromMaxAndMin(job) >= maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString())) {
+            jobRepository.save(job);
+        }
+    }
+
+    public int getNumberJobsInProgress() {
+        return jobRepository.findAll().size();
+    }
+
+    private List<Job> getJobs() {
+        return jobRepository.findAll();
+    }
+
+    private void removeJob(Long id) {
+        jobRepository.deleteById(id);
     }
 }
