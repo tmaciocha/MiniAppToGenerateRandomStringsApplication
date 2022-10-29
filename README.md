@@ -27,5 +27,10 @@ App should be available to download on the git repository (github, gitlab ,bitbu
 After download there should be only one command to run an application and second one to run tests. 
 
 
-DONE:
-- Added Swagger: http://localhost:8080/swagger-ui/index.html
+ADDED:
+- Swagger: http://localhost:8080/swagger-ui/index.html
+- H2 mem database: http://localhost:8080/h2-console/
+  - user: sa
+  - password:
+  - URL: jdbc:h2:mem:appdb
+

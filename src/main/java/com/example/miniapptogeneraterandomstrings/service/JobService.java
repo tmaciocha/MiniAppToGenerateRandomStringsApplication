@@ -58,7 +58,7 @@ public class JobService {
 
         while (iterator.hasNext()) {
             ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
-            Future<?> f = executorService.submit(() -> {
+            executorService.submit(() -> {
                 Job job = iterator.next();
                 FileWriter fileWriter = null;
                 try {
