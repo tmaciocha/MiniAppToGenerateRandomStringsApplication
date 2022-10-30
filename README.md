@@ -1,5 +1,37 @@
 # MiniAppToGenerateRandomStringsApplication
 
+TO RUN APP:
+- mvn spring-boot:run
+
+TO RUN TESTS:
+- mvn test
+
+ENDPOINTS:
+- GET http://localhost:8080/ - to grab results
+- GET http://localhost:8080/runningJobs - to get running jobs number
+- POST http://localhost:8080/ - to add new job
+
+new job json example:
+{
+"min":"5",
+"max":"7",
+"textToGenerateRandomString":"dsfe",
+"numberOfStrings":"24"
+}
+
+
+ADDED:
+- Swagger: http://localhost:8080/swagger-ui/index.html
+- H2 mem database: http://localhost:8080/h2-console/
+  - user: sa
+  - password:
+  - URL: jdbc:h2:mem:appdb
+
+
+
+
+# TASK CONTENT:
+
 Application need to generate a file with random unique strings (every string in a separate row). 
 Users should be able to:
  - define how long the string will be (min and max length), 
@@ -27,10 +59,4 @@ App should be available to download on the git repository (github, gitlab ,bitbu
 After download there should be only one command to run an application and second one to run tests. 
 
 
-ADDED:
-- Swagger: http://localhost:8080/swagger-ui/index.html
-- H2 mem database: http://localhost:8080/h2-console/
-  - user: sa
-  - password:
-  - URL: jdbc:h2:mem:appdb
 
