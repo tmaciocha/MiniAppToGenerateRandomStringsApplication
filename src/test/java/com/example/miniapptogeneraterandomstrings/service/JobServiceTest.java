@@ -3,6 +3,7 @@ package com.example.miniapptogeneraterandomstrings.service;
 import com.example.miniapptogeneraterandomstrings.controllers.JobController;
 import com.example.miniapptogeneraterandomstrings.model.Job;
 import com.example.miniapptogeneraterandomstrings.repository.JobRepository;
+import org.junit.AfterClass;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,9 +11,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +35,7 @@ class JobServiceTest {
     @InjectMocks
     private JobService underTest;
 
-   @BeforeEach
+    @BeforeEach
     void setUp() {
         underTest = new JobService(jobRepository);
     }
@@ -192,14 +197,47 @@ class JobServiceTest {
         }
     }
 
-
     @Test
-    @Disabled
-    void should_generateStrings() {
+    void should_generateStrings() throws FileNotFoundException, InterruptedException {
+//        given
+        List<Job> jobList = new ArrayList<>();
+        Job job = prepareGoodMockData().get(2);
+        int counter = job.getNumberOfStrings();
+//        when
+        jobList.add(job);
+        when(jobRepository.findAll()).thenReturn(jobList);
+        File file = new File("generatedStringsFromGivenStringQWERTY_3.txt");
+        if (file.exists()) {
+            file.delete();
+        }
+        underTest.generateStrings();
+        TimeUnit.SECONDS.sleep(10);
+//        then
+        assertTrue(file.exists());
+        Scanner scanner = new Scanner(file);
+        StringBuilder stringFromFile = new StringBuilder();
+        while (scanner.hasNextLine()) {
+            String newLine = scanner.nextLine();
+            assertTrue(newLine.length() <= job.getMax());
+            assertTrue(newLine.length() >= job.getMin());
+            stringFromFile.append(newLine);
+            counter -= 1;
+        }
+        assertEquals(0,counter);
+        char[] charsFromJobArray = job.getTextToGenerateRandomString().toCharArray();
+        char[] allSignsArray = "fouiplkjhgdsazxcvbnm1234567890!@#$%^&*()+=-][}{:;<>".toCharArray();
 
+        for (int i = 0; i < charsFromJobArray.length; i++) {
+            assertTrue(stringFromFile.toString().contains(String.valueOf(charsFromJobArray[i])));
+        }
 
+        for (int i = 0; i < charsFromJobArray.length; i++) {
+            assertFalse(stringFromFile.toString().contains(String.valueOf(allSignsArray[i])));
+            }
+        if (file.exists()) {
+            file.delete();
+        }
     }
-
 
     @Test
     void getNumberJobsInProgress() {
@@ -246,8 +284,8 @@ class JobServiceTest {
 
     @Test
     void countMissingLetters() {
-       Job job = prepareGoodMockData().get(3);
-       assertEquals(2,underTest.countMissingLetters(job));
-       assertNotEquals(3, underTest.countMissingLetters(job));
+        Job job = prepareGoodMockData().get(3);
+        assertEquals(2, underTest.countMissingLetters(job));
+        assertNotEquals(3, underTest.countMissingLetters(job));
     }
 }

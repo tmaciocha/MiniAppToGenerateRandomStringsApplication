@@ -59,7 +59,7 @@ public class JobService {
             ExecutorService executorService = Executors.newFixedThreadPool(jobList.size());
             executorService.submit(() -> {
                 Job job = iterator.next();
-                FileWriter fileWriter = null;
+                FileWriter fileWriter;
                 try {
                     fileWriter = new FileWriter("generatedStringsFromGivenString" + job.getTextToGenerateRandomString().toUpperCase() + "_" + job.getId() + ".txt", true);
                 } catch (IOException e) {
