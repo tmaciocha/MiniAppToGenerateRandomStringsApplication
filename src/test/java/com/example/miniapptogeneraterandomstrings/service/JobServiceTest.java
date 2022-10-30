@@ -203,15 +203,17 @@ class JobServiceTest {
         List<Job> jobList = new ArrayList<>();
         Job job = prepareGoodMockData().get(2);
         int counter = job.getNumberOfStrings();
-//        when
-        jobList.add(job);
-        when(jobRepository.findAll()).thenReturn(jobList);
+        char[] charsFromJobArray = job.getTextToGenerateRandomString().toCharArray();
+        char[] allSignsArray = "fouiplkjhgdsazxcvbnm1234567890!@#$%^&*()+=-][}{:;<>".toCharArray();
         File file = new File("generatedStringsFromGivenStringQWERTY_3.txt");
+        jobList.add(job);
+//        when
+        when(jobRepository.findAll()).thenReturn(jobList);
         if (file.exists()) {
             file.delete();
         }
         underTest.generateStrings();
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(7);
 //        then
         assertTrue(file.exists());
         Scanner scanner = new Scanner(file);
@@ -223,19 +225,13 @@ class JobServiceTest {
             stringFromFile.append(newLine);
             counter -= 1;
         }
-        assertEquals(0,counter);
-        char[] charsFromJobArray = job.getTextToGenerateRandomString().toCharArray();
-        char[] allSignsArray = "fouiplkjhgdsazxcvbnm1234567890!@#$%^&*()+=-][}{:;<>".toCharArray();
+        assertEquals(0, counter);
 
         for (int i = 0; i < charsFromJobArray.length; i++) {
             assertTrue(stringFromFile.toString().contains(String.valueOf(charsFromJobArray[i])));
         }
-
         for (int i = 0; i < charsFromJobArray.length; i++) {
             assertFalse(stringFromFile.toString().contains(String.valueOf(allSignsArray[i])));
-            }
-        if (file.exists()) {
-            file.delete();
         }
     }
 
