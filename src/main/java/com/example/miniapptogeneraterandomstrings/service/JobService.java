@@ -10,14 +10,13 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 @Service
 @RequiredArgsConstructor
 public class JobService {
     private final JobRepository jobRepository;
 
-    private Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
+    public Long maxNumberOfCharsCombinationsFromMaxAndMin(Job job) {
         int min = job.getMin();
         int max = job.getMax();
         int numberOfStrings = job.getNumberOfStrings();
@@ -27,7 +26,7 @@ public class JobService {
                 job.getTextToGenerateRandomString() == null ||
                 numberOfStrings <= 0 ||
                 job.getTextToGenerateRandomString().equals("")) {
-            throw new IllegalArgumentException("ERROR: Change input data.");
+            throw new IllegalArgumentException("ERROR: Wrong input data.");
         }
 
         for (int i = max; i >= min; i--) {
@@ -45,19 +44,19 @@ public class JobService {
         return maxNumberOfCombinations;
     }
 
-    private Long maxNumberOfGivenStringCombinations(String string) {
+    public Long maxNumberOfGivenStringCombinations(String string) {
         return getFactorial(string.length());
     }
 
     public void generateStrings() {
-        List<Job> jobs = getJobs();
+        List<Job> jobList = getAllJobs();
 
-        jobs.sort(Comparator.comparingInt(Job::getNumberOfStrings));
+        jobList.sort(Comparator.comparingInt(Job::getNumberOfStrings));
 
-        Iterator<Job> iterator = jobs.iterator();
+        Iterator<Job> iterator = jobList.iterator();
 
         while (iterator.hasNext()) {
-            ExecutorService executorService = Executors.newFixedThreadPool(jobs.size());
+            ExecutorService executorService = Executors.newFixedThreadPool(jobList.size());
             executorService.submit(() -> {
                 Job job = iterator.next();
                 FileWriter fileWriter = null;
@@ -94,21 +93,23 @@ public class JobService {
         }
     }
 
-    private int countMissingLetters(Job job) {
+    public int countMissingLetters(Job job) {
         return job.getMax() % job.getTextToGenerateRandomString().length();
     }
 
-    private int getRandomNumber(int min, int max) {
+    public int getRandomNumber(int min, int max) {
         return (int) ((Math.random() * (max + 1 - min)) + min);
     }
 
-    public void saveJob(Job job) {
+    public Boolean saveJob(Job job) {
         if (maxNumberOfCharsCombinationsFromMaxAndMin(job) >= maxNumberOfGivenStringCombinations(job.getTextToGenerateRandomString())) {
             jobRepository.save(job);
+            return true;
         }
+        return false;
     }
 
-    private Long getFactorial(int number) {
+    public Long getFactorial(int number) {
         Long factorial = 1L;
         for (int i = 1; i <= number; i++) {
             factorial *= i;
@@ -116,11 +117,8 @@ public class JobService {
         return factorial;
     }
 
-    public int getNumberJobsInProgress() {
-        return jobRepository.findAll().size();
-    }
 
-    private List<Job> getJobs() {
+    public List<Job> getAllJobs() {
         return jobRepository.findAll();
     }
 

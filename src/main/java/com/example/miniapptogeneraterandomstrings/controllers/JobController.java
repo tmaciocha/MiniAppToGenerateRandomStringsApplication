@@ -18,15 +18,15 @@ public class JobController {
     //to add new job
     @PostMapping("/")
     public Job addJob(@RequestBody Job job){
-            jobService.saveJob(job);
-            jobs.add(job);
+        jobService.saveJob(job);
+        jobs.add(job);
         return job;
     }
 
     //to see how many jobs are running
     @GetMapping("/runningJobs")
-    public int getJob(){
-        return jobService.getNumberJobsInProgress();
+    public int getJob() {
+        return jobService.getAllJobs().size();
     }
 
 
